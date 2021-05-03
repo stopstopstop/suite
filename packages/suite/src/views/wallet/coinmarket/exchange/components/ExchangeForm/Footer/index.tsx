@@ -19,26 +19,44 @@ const Center = styled.div`
 
 const StyledButton = styled(Button)`
     min-width: 200px;
-    margin-left: 20px;
 `;
 
 const Footer = () => {
-    const { formState, watch, errors, isComposing } = useCoinmarketExchangeFormContext();
+    const {
+        formState,
+        watch,
+        errors,
+        isComposing,
+        canCompareOffers,
+        formNoteTranslationId,
+    } = useCoinmarketExchangeFormContext();
     const hasValues = !!watch(CRYPTO_INPUT) && !!watch('receiveCryptoSelect')?.value;
     const formIsValid = Object.keys(errors).length === 0;
 
+    const isCompareOffersButtonDisabled =
+        !canCompareOffers && (!(formIsValid && hasValues) || formState.isSubmitting);
+
     return (
-        <Wrapper>
-            <Center>
-                <StyledButton
-                    isDisabled={!(formIsValid && hasValues) || formState.isSubmitting}
-                    isLoading={formState.isSubmitting || isComposing}
-                    type="submit"
-                >
-                    <Translation id="TR_EXCHANGE_SHOW_OFFERS" />
-                </StyledButton>
-            </Center>
-        </Wrapper>
+        <>
+            <Wrapper>
+                <Center>
+                    <StyledButton
+                        isDisabled={isCompareOffersButtonDisabled}
+                        isLoading={formState.isSubmitting || isComposing}
+                        type="submit"
+                    >
+                        <Translation id="TR_EXCHANGE_SHOW_OFFERS" />
+                    </StyledButton>
+                </Center>
+            </Wrapper>
+            {formNoteTranslationId && (
+                <Wrapper>
+                    <Center>
+                        <Translation id={formNoteTranslationId} />
+                    </Center>
+                </Wrapper>
+            )}
+        </>
     );
 };
 

@@ -29,6 +29,7 @@ import { getAmountLimits, processQuotes } from '@wallet-utils/coinmarket/sellUti
 import { useFees } from './form/useFees';
 import { useCompose } from './form/useCompose';
 import { DEFAULT_PAYMENT, DEFAULT_VALUES } from '@wallet-constants/sendForm';
+import { ExtendedMessageDescriptor } from '@suite/types/suite';
 
 export const SellFormContext = createContext<SellFormContextValues | null>(null);
 SellFormContext.displayName = 'CoinmarketSellContext';
@@ -145,7 +146,9 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
     });
 
     const typedRegister = useCallback(<T>(rules?: T) => register(rules), [register]);
-    const isLoading = !sellInfo?.sellList || !state?.formValues.outputs[0].address;
+    const isDeviceConnected = !!device?.connected;
+    const isLoading =
+        !sellInfo?.sellList || (!state?.formValues.outputs[0].address && isDeviceConnected);
     const noProviders =
         sellInfo?.sellList?.providers.length === 0 ||
         !sellInfo?.supportedCryptoCurrencies.has(account.symbol);
@@ -273,6 +276,13 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
         }
     };
 
+    const hasOutputAddress = !!state?.formValues?.outputs[0]?.address;
+    const canShowOffers = isDeviceConnected && hasOutputAddress;
+    let formNoteTranslationId: ExtendedMessageDescriptor['id'] | undefined;
+    if (!isDeviceConnected) {
+        formNoteTranslationId = 'TR_SELL_CONNECT_DEVICE_TO_CONTINUE';
+    }
+
     return {
         ...methods,
         account,
@@ -300,6 +310,8 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
         network,
         onCryptoAmountChange,
         onFiatAmountChange,
+        canShowOffers,
+        formNoteTranslationId,
     };
 };
 

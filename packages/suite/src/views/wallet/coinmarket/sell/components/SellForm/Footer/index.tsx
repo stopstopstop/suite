@@ -49,6 +49,12 @@ const Right = styled.div`
     }
 `;
 
+const Center = styled.div`
+    display: flex;
+    flex: 1;
+    justify-content: center;
+`;
+
 const Label = styled.div`
     display: flex;
     align-items: center;
@@ -74,6 +80,12 @@ const StyledSelect = styled(Select)`
     width: max-content;
 `;
 
+const FormNoteWrapper = styled.div`
+    display: flex;
+    align-items: center;
+    padding-top: 40px;
+`;
+
 const Footer = () => {
     const {
         errors,
@@ -84,6 +96,8 @@ const Footer = () => {
         defaultCountry,
         quotesRequest,
         isComposing,
+        canShowOffers,
+        formNoteTranslationId,
     } = useCoinmarketSellFormContext();
     const countrySelect = 'countrySelect';
     const hasValues =
@@ -91,67 +105,79 @@ const Footer = () => {
     // used instead of formState.isValid, which is sometimes returning false even if there are no errors
     const formIsValid = Object.keys(errors).length === 0;
 
-    return (
-        <Wrapper>
-            <Left>
-                <Label>
-                    <Translation id="TR_SELL_OFFERS_FOR" />
-                </Label>
-                <Controller
-                    control={control}
-                    defaultValue={
-                        quotesRequest?.country
-                            ? {
-                                  label: regional.countriesMap.get(quotesRequest.country),
-                                  value: quotesRequest.country,
-                              }
-                            : defaultCountry
-                    }
-                    name={countrySelect}
-                    render={({ onChange, value }) => (
-                        <StyledSelect
-                            noTopLabel
-                            isDropdownVisible
-                            isHovered
-                            options={regional.countriesOptions}
-                            isSearchable
-                            value={value}
-                            formatOptionLabel={(option: CountryOption) => {
-                                const labelParts = getCountryLabelParts(option.label);
-                                if (!labelParts) return null;
+    const isShowOffersButtonDisabled =
+        !canShowOffers && (!(formIsValid && hasValues) || formState.isSubmitting);
 
-                                return (
-                                    <OptionLabel>
-                                        <FlagWrapper>
-                                            <Flag country={option.value} />
-                                        </FlagWrapper>
-                                        <LabelText>{labelParts.text}</LabelText>
-                                    </OptionLabel>
-                                );
-                            }}
-                            isClearable={false}
-                            minWidth="160px"
-                            isClean
-                            hideTextCursor
-                            onChange={(selected: any) => {
-                                onChange(selected);
-                                setAmountLimits(undefined);
-                            }}
-                            maxSearchLength={12}
-                        />
-                    )}
-                />
-            </Left>
-            <Right>
-                <StyledButton
-                    isDisabled={!(formIsValid && hasValues) || formState.isSubmitting}
-                    isLoading={formState.isSubmitting || isComposing}
-                    type="submit"
-                >
-                    <Translation id="TR_SELL_SHOW_OFFERS" />
-                </StyledButton>
-            </Right>
-        </Wrapper>
+    return (
+        <>
+            <Wrapper>
+                <Left>
+                    <Label>
+                        <Translation id="TR_SELL_OFFERS_FOR" />
+                    </Label>
+                    <Controller
+                        control={control}
+                        defaultValue={
+                            quotesRequest?.country
+                                ? {
+                                      label: regional.countriesMap.get(quotesRequest.country),
+                                      value: quotesRequest.country,
+                                  }
+                                : defaultCountry
+                        }
+                        name={countrySelect}
+                        render={({ onChange, value }) => (
+                            <StyledSelect
+                                noTopLabel
+                                isDropdownVisible
+                                isHovered
+                                options={regional.countriesOptions}
+                                isSearchable
+                                value={value}
+                                formatOptionLabel={(option: CountryOption) => {
+                                    const labelParts = getCountryLabelParts(option.label);
+                                    if (!labelParts) return null;
+
+                                    return (
+                                        <OptionLabel>
+                                            <FlagWrapper>
+                                                <Flag country={option.value} />
+                                            </FlagWrapper>
+                                            <LabelText>{labelParts.text}</LabelText>
+                                        </OptionLabel>
+                                    );
+                                }}
+                                isClearable={false}
+                                minWidth="160px"
+                                isClean
+                                hideTextCursor
+                                onChange={(selected: any) => {
+                                    onChange(selected);
+                                    setAmountLimits(undefined);
+                                }}
+                                maxSearchLength={12}
+                            />
+                        )}
+                    />
+                </Left>
+                <Right>
+                    <StyledButton
+                        isDisabled={isShowOffersButtonDisabled}
+                        isLoading={formState.isSubmitting || isComposing}
+                        type="submit"
+                    >
+                        <Translation id="TR_SELL_SHOW_OFFERS" />
+                    </StyledButton>
+                </Right>
+            </Wrapper>
+            <Center>
+                {formNoteTranslationId && (
+                    <FormNoteWrapper>
+                        <Translation id={formNoteTranslationId} />
+                    </FormNoteWrapper>
+                )}
+            </Center>
+        </>
     );
 };
 

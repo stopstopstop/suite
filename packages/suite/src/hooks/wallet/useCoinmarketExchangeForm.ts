@@ -24,6 +24,7 @@ import { getAmountLimits, splitToFixedFloatQuotes } from '@wallet-utils/coinmark
 import { useFees } from './form/useFees';
 import { useCompose } from './form/useCompose';
 import { DEFAULT_PAYMENT, DEFAULT_VALUES } from '@wallet-constants/sendForm';
+import { ExtendedMessageDescriptor } from '@suite/types/suite';
 
 export const ExchangeFormContext = createContext<ExchangeFormContextValues | null>(null);
 ExchangeFormContext.displayName = 'CoinmarketExchangeContext';
@@ -170,10 +171,12 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
     };
 
     const typedRegister = useCallback(<T>(rules?: T) => register(rules), [register]);
+    const isDeviceConnected = !!device?.connected;
     const isLoading =
         !exchangeInfo?.exchangeList ||
         exchangeInfo?.exchangeList.length === 0 ||
-        !state?.formValues.outputs[0].address;
+        (!state?.formValues.outputs[0].address && isDeviceConnected);
+
     const noProviders =
         exchangeInfo?.exchangeList?.length === 0 || !exchangeInfo?.sellSymbols.has(account.symbol);
 
@@ -251,6 +254,13 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
         }
     };
 
+    const hasOutputAddress = !!state?.formValues?.outputs[0]?.address;
+    const canCompareOffers = isDeviceConnected && hasOutputAddress;
+    let formNoteTranslationId: ExtendedMessageDescriptor['id'] | undefined;
+    if (!isDeviceConnected) {
+        formNoteTranslationId = 'TR_EXCHANGE_CONNECT_DEVICE_TO_CONTINUE';
+    }
+
     return {
         ...methods,
         account,
@@ -277,6 +287,8 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
         isLoading,
         noProviders,
         network,
+        canCompareOffers,
+        formNoteTranslationId,
     };
 };
 

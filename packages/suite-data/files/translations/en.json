@@ -643,6 +643,7 @@
 	"TR_EXCHANGE_SEND_FROM": "Sending account",
 	"TR_EXCHANGE_SEND_TO": "{providerName}’s address",
 	"TR_EXCHANGE_SHOW_OFFERS": "Compare offers",
+	"TR_EXCHANGE_CONNECT_DEVICE_TO_CONTINUE": "Connect your device to continue.",
 	"TR_EXCHANGE_STABLE_COINS": "Stablecoins",
 	"TR_EXCHANGE_STATUS_CONFIRMING": "Pending",
 	"TR_EXCHANGE_STATUS_CONVERTING": "Converting",

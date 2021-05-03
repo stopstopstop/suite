@@ -1,4 +1,4 @@
-import { AppState } from '@suite-types';
+import { AppState, ExtendedMessageDescriptor } from '@suite-types';
 import { UseFormMethods } from 'react-hook-form';
 import { Account, Network, CoinFiatRates } from '@wallet-types';
 import { FeeLevel } from 'trezor-connect';
@@ -70,4 +70,6 @@ export type ExchangeFormContextValues = Omit<UseFormMethods<ExchangeFormState>, 
     noProviders: boolean;
     network: Network;
     feeInfo: FeeInfo;
+    canCompareOffers: boolean;
+    formNoteTranslationId: ExtendedMessageDescriptor['id'] | undefined;
 };

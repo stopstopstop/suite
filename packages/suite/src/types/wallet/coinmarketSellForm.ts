@@ -1,4 +1,4 @@
-import { AppState } from '@suite-types';
+import { AppState, ExtendedMessageDescriptor } from '@suite-types';
 import { UseFormMethods } from 'react-hook-form';
 import { Account, Network, CoinFiatRates } from '@wallet-types';
 import { FeeLevel } from 'trezor-connect';
@@ -73,4 +73,6 @@ export type SellFormContextValues = Omit<UseFormMethods<SellFormState>, 'registe
     feeInfo: FeeInfo;
     onCryptoAmountChange: (amount: string) => void;
     onFiatAmountChange: (amount: string) => void;
+    canShowOffers: boolean;
+    formNoteTranslationId: ExtendedMessageDescriptor['id'] | undefined;
 };
