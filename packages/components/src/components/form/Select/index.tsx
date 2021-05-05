@@ -188,6 +188,7 @@ interface CommonProps extends Omit<SelectProps, 'components' | 'isSearchable'> {
     minWidth?: string;
     borderWidth?: number;
     borderRadius?: number;
+    'data-test'?: string;
 }
 
 // Make sure isSearchable can't be defined if useKeyPressScroll===true

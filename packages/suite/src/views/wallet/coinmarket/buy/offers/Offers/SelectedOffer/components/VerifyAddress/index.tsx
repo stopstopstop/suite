@@ -174,6 +174,7 @@ const VerifyAddressComponent = () => {
             <ButtonWrapper>
                 {(!addressVerified || addressVerified !== address) && (
                     <Button
+                        data-test="@coinmarket/buy/offers/confirm-on-trezor-button"
                         isLoading={callInProgress}
                         isDisabled={callInProgress}
                         onClick={() => verifyAddress(account)}
@@ -183,6 +184,7 @@ const VerifyAddressComponent = () => {
                 )}
                 {addressVerified && addressVerified === address && (
                     <Button
+                        data-test="@coinmarket/buy/offers/finish-transaction-button"
                         isLoading={callInProgress}
                         isDisabled={callInProgress}
                         onClick={() => goToPayment(address)}
