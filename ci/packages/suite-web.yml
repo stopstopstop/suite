@@ -168,6 +168,11 @@ e2e web metadata:
   variables:
     TEST_GROUP: '@group:metadata'
 
+# e2e web coinmarket:
+#   extends: .e2e web
+#   variables:
+#     TEST_GROUP: '@group:coinmarket'
+
 # Update snapshots
 # You may update snapshots either locally (see readme https://docs.trezor.io/trezor-suite/tests/e2e-web.html)
 # But as this is quite time consuming you may prefer to do it in CI
