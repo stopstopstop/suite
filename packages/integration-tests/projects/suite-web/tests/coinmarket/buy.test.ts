@@ -24,8 +24,8 @@ describe('Coinmarket buy', () => {
         cy.getTestElement('@coinmarket/buy/offers/buy-terms-confirm-button').click();
         cy.getTestElement('@coinmarket/buy/offers/confirm-on-trezor-button').click();
         cy.task('pressYes');
-        cy.getTestElement('@coinmarket/buy/offers/finish-transaction-button').click();
 
+        // cy.getTestElement('@coinmarket/buy/offers/finish-transaction-button').click();
         // TODO: click buy button on mocked server
         // TODO: check the UI in suite for completed tx
     });
