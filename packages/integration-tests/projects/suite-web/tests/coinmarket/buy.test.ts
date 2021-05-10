@@ -2,8 +2,6 @@
 
 describe('Coinmarket buy', () => {
     beforeEach(() => {
-        cy.task('stopEmu');
-        cy.task('stopBridge');
         cy.task('startBridge');
         cy.task('startEmu', { wipe: true });
         cy.task('setupEmu', { needs_backup: false });
@@ -28,5 +26,11 @@ describe('Coinmarket buy', () => {
         // cy.getTestElement('@coinmarket/buy/offers/finish-transaction-button').click();
         // TODO: click buy button on mocked server
         // TODO: check the UI in suite for completed tx
+    });
+
+    it('Should show same crypto currency as it has been chosen (BTC)', () => {
+        // Cannot easily check selected account for now. Rely on URI.
+        cy.prefixedVisit('/accounts/coinmarket/buy/#/btc/0');
+        cy.getTestElement('@coinmarket/buy/crypto-currency-select/input').contains('BTC');
     });
 });
