@@ -1,5 +1,5 @@
 import { createContext, useContext, useCallback, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useInvityAPI } from '@wallet-hooks/useCoinmarket';
 import * as coinmarketBuyActions from '@wallet-actions/coinmarketBuyActions';
 import { useActions } from '@suite-hooks';
@@ -15,16 +15,23 @@ import {
     AmountLimits,
     BuyFormContextValues,
 } from '@wallet-types/coinmarketBuyForm';
+import { useFormDraft } from '@wallet-hooks/useFormDraft';
+import useDebounce from 'react-use/lib/useDebounce';
 
 export const BuyFormContext = createContext<BuyFormContextValues | null>(null);
 BuyFormContext.displayName = 'CoinmarketBuyContext';
 
 export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
-    const { selectedAccount, cachedAccountInfo, quotesRequest } = props;
+    const { selectedAccount } = props;
     const { buyInfo } = useInvityAPI();
     const { account, network } = selectedAccount;
     const [amountLimits, setAmountLimits] = useState<AmountLimits | undefined>(undefined);
-    const methods = useForm<FormState>({ mode: 'onChange' });
+    const { saveDraft, getDraft, removeDraft } = useFormDraft<FormState>('coinmarket-buy');
+    const defaultValues = getDraft(selectedAccount.account.key);
+    const methods = useForm<FormState>({
+        mode: 'onChange',
+        defaultValues,
+    });
 
     const { saveQuoteRequest, saveQuotes, saveCachedAccountInfo, saveTrade, goto } = useActions({
         saveQuoteRequest: coinmarketBuyActions.saveQuoteRequest,
@@ -34,7 +41,24 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         goto: routerActions.goto,
     });
 
-    const { register } = methods;
+    const {
+        register,
+        control,
+        formState: { isValidating, isDirty },
+        errors,
+    } = methods;
+
+    const values = useWatch<FormState>({ control });
+
+    useDebounce(
+        () => {
+            if (isDirty && !isValidating && Object.keys(errors).length === 0) {
+                saveDraft(selectedAccount.account.key, values as FormState);
+            }
+        },
+        200,
+        [errors, saveDraft, selectedAccount.account.key, values, isValidating, isDirty],
+    );
 
     const onSubmit = async () => {
         const formValues = methods.getValues();
@@ -77,11 +101,6 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         ? buildOption(defaultCurrencyInfo)
         : { label: 'USD', value: 'usd' };
 
-    const accountHasCachedRequest =
-        account.symbol === cachedAccountInfo.symbol &&
-        account.index === cachedAccountInfo.index &&
-        account.accountType === cachedAccountInfo.accountType;
-
     const typedRegister = useCallback(<T>(rules?: T) => register(rules), [register]);
     const isLoading = !buyInfo || !buyInfo?.buyInfo;
     const noProviders =
@@ -97,18 +116,16 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         defaultCurrency,
         register: typedRegister,
         buyInfo,
-        accountHasCachedRequest,
-        cachedAccountInfo,
-        saveQuoteRequest,
         saveQuotes,
-        quotesRequest,
-        saveCachedAccountInfo,
         saveTrade,
         amountLimits,
         setAmountLimits,
         isLoading,
         noProviders,
         network,
+        cryptoInputValue: values.cryptoInput,
+        removeDraft,
+        isDirty,
     };
 };
 

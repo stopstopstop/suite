@@ -166,6 +166,10 @@ const definedMessages = defineMessages({
         defaultMessage: 'Check on your Trezor now',
         id: 'TR_ADDRESS_MODAL_CHECK_ON_TREZOR',
     },
+    TR_CLEAR_FORM: {
+        defaultMessage: 'Clear form',
+        id: 'TR_CLEAR_FORM',
+    },
     TR_TRADE_NOT_FOUND: {
         defaultMessage: 'Trade not found',
         id: 'TR_TRADE_NOT_FOUND',

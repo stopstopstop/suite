@@ -9,6 +9,7 @@ import {
     GRAPH,
     SEND,
     COINMARKET_COMMON,
+    FORM_DRAFT,
 } from '@wallet-actions/constants';
 import * as storageActions from '@suite-actions/storageActions';
 import * as accountUtils from '@wallet-utils/accountUtils';
@@ -191,6 +192,13 @@ const storageMiddleware = (api: MiddlewareAPI<Dispatch, AppState>) => (next: Dis
         case MESSAGE_SYSTEM.FETCH_CONFIG_SUCCESS_UPDATE:
         case MESSAGE_SYSTEM.DISMISS_MESSAGE:
             api.dispatch(storageActions.saveMessageSystem());
+            break;
+
+        case FORM_DRAFT.STORE_DRAFT:
+            storageActions.saveFormDraft(action.key, action.formDraft);
+            break;
+        case FORM_DRAFT.REMOVE_DRAFT:
+            storageActions.removeFormDraft(action.key);
             break;
 
         default:

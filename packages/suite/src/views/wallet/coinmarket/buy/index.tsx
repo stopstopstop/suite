@@ -8,8 +8,6 @@ import BuyForm from './components/BuyForm';
 
 const mapStateToProps = (state: AppState): ComponentProps => ({
     selectedAccount: state.wallet.selectedAccount,
-    quotesRequest: state.wallet.coinmarket.buy.quotesRequest,
-    cachedAccountInfo: state.wallet.coinmarket.buy.cachedAccountInfo,
 });
 
 const CoinmarketBuyLoaded = (props: Props) => {
