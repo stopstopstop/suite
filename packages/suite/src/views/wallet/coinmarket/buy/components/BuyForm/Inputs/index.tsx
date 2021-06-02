@@ -21,8 +21,9 @@ const Wrapper = styled.div`
     }
 `;
 
-const ClearAllButtonWrapper = styled(Wrapper)`
-    padding-bottom: 9px;
+const ClearAllButtonWrapper = styled(Wrapper)<{ isVisible: boolean }>`
+    padding-bottom: 25px;
+    visibility: ${props => (props.isVisible ? 'visible' : 'hidden')};
 `;
 
 const Left = styled.div`
@@ -42,6 +43,7 @@ const Middle = styled.div`
     height: auto;
     align-items: center;
     justify-content: center;
+    height: 48px;
 `;
 
 const StyledIcon = styled(Icon)`
@@ -101,6 +103,7 @@ const Inputs = () => {
             <Wrapper>
                 <Left>
                     <Input
+                        noTopLabel
                         innerRef={register({
                             validate: (value: string) => {
                                 if (activeInput === fiatInput) {
@@ -202,6 +205,7 @@ const Inputs = () => {
                 </Middle>
                 <Right>
                     <StyledInput
+                        noTopLabel
                         onFocus={() => {
                             setActiveInput(cryptoInput);
                         }}
@@ -311,14 +315,9 @@ const Inputs = () => {
                     />
                 </Right>
             </Wrapper>
-            <ClearAllButtonWrapper>
+            <ClearAllButtonWrapper isVisible={isDirty}>
                 <Right>
-                    <Button
-                        isDisabled={!isDirty}
-                        type="button"
-                        variant="tertiary"
-                        onClick={handleClearFormButtonClick}
-                    >
+                    <Button type="button" variant="tertiary" onClick={handleClearFormButtonClick}>
                         <Translation id="TR_CLEAR_FORM" />
                     </Button>
                 </Right>
