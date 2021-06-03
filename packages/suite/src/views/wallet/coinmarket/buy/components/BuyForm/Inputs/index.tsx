@@ -3,7 +3,7 @@ import { Translation } from '@suite-components';
 import { getCryptoOptions } from '@wallet-utils/coinmarket/buyUtils';
 import { Select, Icon, Input, variables, Button } from '@trezor/components';
 import { buildOption } from '@wallet-utils/coinmarket/coinmarketUtils';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Bignumber from 'bignumber.js';
 import { Controller } from 'react-hook-form';
 import { useCoinmarketBuyFormContext } from '@wallet-hooks/useCoinmarketBuyForm';
@@ -40,7 +40,6 @@ const Right = styled.div`
 const Middle = styled.div`
     display: flex;
     min-width: 65px;
-    height: auto;
     align-items: center;
     justify-content: center;
     height: 48px;
