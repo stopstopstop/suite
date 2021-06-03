@@ -1,4 +1,4 @@
-import { Icon, variables, useTheme } from '@trezor/components';
+import { Icon, variables, useTheme, Button } from '@trezor/components';
 import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { useCoinmarketExchangeFormContext } from '@wallet-hooks/useCoinmarketExchangeForm';
@@ -9,11 +9,18 @@ import FractionButtons from '@wallet-components/CoinMarketFractionButtons';
 import { CRYPTO_INPUT, CRYPTO_TOKEN, FIAT_INPUT } from '@wallet-types/coinmarketExchangeForm';
 import { useLayoutSize } from '@suite/hooks/suite';
 import BigNumber from 'bignumber.js';
+import { Translation } from '@suite/components/suite';
 
 const Wrapper = styled.div`
     display: flex;
     flex: 1;
     flex-direction: column;
+`;
+
+const Row = styled.div`
+    display: flex;
+    flex: 1;
+    flex-direction: row;
 `;
 
 const Top = styled.div`
@@ -62,6 +69,12 @@ const EmptyDiv = styled.div`
     width: 100%;
 `;
 
+const ClearFormButtonWrapper = styled.div`
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+`;
+
 const Inputs = () => {
     const theme = useTheme();
     const {
@@ -75,8 +88,11 @@ const Inputs = () => {
         setValue,
         updateFiatValue,
         clearErrors,
+        formState,
+        handleClearFormButtonClick,
+        isDraft,
     } = useCoinmarketExchangeFormContext();
-
+    const { isDirty } = formState;
     const tokenAddress = getValues(CRYPTO_TOKEN);
     const tokenData = account.tokens?.find(t => t.address === tokenAddress);
 
@@ -89,7 +105,7 @@ const Inputs = () => {
 
     const setRatioAmount = useCallback(
         (divisor: number) => {
-            setValue('setMaxOutputId', undefined);
+            setValue('setMaxOutputId', undefined, { shouldDirty: true });
             const amount = tokenData
                 ? new BigNumber(tokenData.balance || '0')
                       .dividedBy(divisor)
@@ -99,7 +115,7 @@ const Inputs = () => {
                       .dividedBy(divisor)
                       .decimalPlaces(network.decimals)
                       .toString();
-            setValue(CRYPTO_INPUT, amount);
+            setValue(CRYPTO_INPUT, amount, { shouldDirty: true });
             updateFiatValue(amount);
             clearErrors([FIAT_INPUT, CRYPTO_INPUT]);
             composeRequest();
@@ -116,7 +132,7 @@ const Inputs = () => {
     );
 
     const setAllAmount = useCallback(() => {
-        setValue('setMaxOutputId', 0);
+        setValue('setMaxOutputId', 0, { shouldDirty: true });
         clearErrors([FIAT_INPUT, CRYPTO_INPUT]);
         composeRequest();
     }, [clearErrors, composeRequest, setValue]);
@@ -151,17 +167,43 @@ const Inputs = () => {
                     )}
                     <StyledIcon icon="TRANSFER" size={16} />
                     {!isXLargeLayoutSize && <EmptyDiv />}
+                    {!isXLargeLayoutSize && (
+                        <ClearFormButtonWrapper>
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                onClick={handleClearFormButtonClick}
+                            >
+                                <Translation id="TR_CLEAR_FORM" />
+                            </Button>
+                        </ClearFormButtonWrapper>
+                    )}
                 </MiddleWrapper>
                 <RightWrapper>
                     <ReceiveCryptoSelect />
                 </RightWrapper>
             </Top>
             {isXLargeLayoutSize && (
-                <FractionButtons
-                    disabled={isBalanceZero}
-                    onFractionClick={setRatioAmount}
-                    onAllClick={setAllAmount}
-                />
+                <Row>
+                    <LeftWrapper>
+                        <FractionButtons
+                            disabled={isBalanceZero}
+                            onFractionClick={setRatioAmount}
+                            onAllClick={setAllAmount}
+                        />
+                    </LeftWrapper>
+                    <RightWrapper>
+                        {(isDirty || isDraft) && (
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                onClick={handleClearFormButtonClick}
+                            >
+                                <Translation id="TR_CLEAR_FORM" />
+                            </Button>
+                        )}
+                    </RightWrapper>
+                </Row>
             )}
         </Wrapper>
     );

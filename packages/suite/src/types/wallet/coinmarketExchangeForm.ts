@@ -1,5 +1,5 @@
 import { AppState } from '@suite-types';
-import { UseFormMethods } from 'react-hook-form';
+import { UseFormMethods, FormState as ReactHookFormState } from 'react-hook-form';
 import { Account, Network, CoinFiatRates } from '@wallet-types';
 import { FeeLevel } from 'trezor-connect';
 import { ExchangeTrade, ExchangeTradeQuoteRequest, ExchangeCoinInfo } from 'invity-api';
@@ -70,4 +70,8 @@ export type ExchangeFormContextValues = Omit<UseFormMethods<ExchangeFormState>, 
     noProviders: boolean;
     network: Network;
     feeInfo: FeeInfo;
+    removeDraft: (key: string) => void;
+    formState: ReactHookFormState<ExchangeFormState>;
+    handleClearFormButtonClick: () => void;
+    isDraft: boolean;
 };

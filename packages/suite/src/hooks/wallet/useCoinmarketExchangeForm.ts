@@ -1,5 +1,5 @@
-import { createContext, useContext, useCallback, useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { createContext, useContext, useCallback, useState, useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { ExchangeTradeQuoteRequest } from 'invity-api';
 import { useActions, useSelector } from '@suite-hooks';
 import invityAPI from '@suite-services/invityAPI';
@@ -24,11 +24,17 @@ import { getAmountLimits, splitToFixedFloatQuotes } from '@wallet-utils/coinmark
 import { useFees } from './form/useFees';
 import { useCompose } from './form/useCompose';
 import { DEFAULT_PAYMENT, DEFAULT_VALUES } from '@wallet-constants/sendForm';
+import { useFormDraft } from '@wallet-hooks/useFormDraft';
+import useDebounce from 'react-use/lib/useDebounce';
 
 export const ExchangeFormContext = createContext<ExchangeFormContextValues | null>(null);
 ExchangeFormContext.displayName = 'CoinmarketExchangeContext';
 
-const useExchangeState = ({ selectedAccount, fees }: Props, currentState: boolean) => {
+const useExchangeState = (
+    { selectedAccount, fees }: Props,
+    currentState: boolean,
+    draft?: ExchangeFormState,
+) => {
     // do not calculate if currentState is already set (prevent re-renders)
     if (selectedAccount.status !== 'loaded' || currentState) return;
 
@@ -49,6 +55,7 @@ const useExchangeState = ({ selectedAccount, fees }: Props, currentState: boolea
                 },
             ],
             options: ['broadcast'],
+            ...draft,
         } as FormState, // TODO: remove type casting (options string[])
     };
 };
@@ -79,8 +86,14 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
         accounts: state.wallet.accounts,
     }));
 
+    const { getDraft, saveDraft, removeDraft } = useFormDraft<ExchangeFormState>(
+        'coinmarket-exchange',
+    );
+    const draft = getDraft(account.key);
+    const isDraft = !!draft;
+
     // throttle initial state calculation
-    const initState = useExchangeState(props, !!state);
+    const initState = useExchangeState(props, !!state, draft);
     useEffect(() => {
         const setStateAsync = async (initState: ReturnType<typeof useExchangeState>) => {
             const address = await getComposeAddressPlaceholder(account, network, device, accounts);
@@ -95,12 +108,39 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
         }
     }, [state, initState, account, network, device, accounts]);
 
+    const defaultValues = useMemo(
+        () => ({ selectedFee: 'normal', feePerUnit: '', feeLimit: '' } as const),
+        [],
+    );
+
     const methods = useForm<ExchangeFormState>({
         mode: 'onChange',
         shouldUnregister: false, // NOTE: tracking custom fee inputs
-        defaultValues: { selectedFee: 'normal', feePerUnit: '', feeLimit: '' },
+        defaultValues: { ...defaultValues, ...draft },
     });
-    const { reset, register, setValue, getValues, setError, clearErrors } = methods;
+    const {
+        reset,
+        register,
+        setValue,
+        getValues,
+        setError,
+        clearErrors,
+        formState,
+        errors,
+        control,
+    } = methods;
+
+    const values = useWatch<ExchangeFormState>({ control });
+
+    useDebounce(
+        () => {
+            if (formState.isDirty && !formState.isValidating && Object.keys(errors).length === 0) {
+                saveDraft(account.key, values as ExchangeFormState);
+            }
+        },
+        200,
+        [errors, saveDraft, account.key, values, formState],
+    );
 
     // react-hook-form auto register custom form fields (without HTMLElement)
     useEffect(() => {
@@ -251,6 +291,11 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
         }
     };
 
+    const handleClearFormButtonClick = useCallback(() => {
+        removeDraft(account.key);
+        reset(defaultValues);
+    }, [account.key, removeDraft, reset, defaultValues]);
+
     return {
         ...methods,
         account,
@@ -277,6 +322,10 @@ export const useCoinmarketExchangeForm = (props: Props): ExchangeFormContextValu
         isLoading,
         noProviders,
         network,
+        removeDraft,
+        formState,
+        handleClearFormButtonClick,
+        isDraft,
     };
 };
 
