@@ -1,4 +1,4 @@
-import { Icon, variables } from '@trezor/components';
+import { Button, Icon, variables } from '@trezor/components';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useCoinmarketSellFormContext } from '@wallet-hooks/useCoinmarketSellForm';
 import styled from 'styled-components';
@@ -8,11 +8,18 @@ import CryptoInput from './CryptoInput';
 import { useLayoutSize } from '@suite/hooks/suite';
 import FractionButtons from '@suite/components/wallet/CoinMarketFractionButtons';
 import BigNumber from 'bignumber.js';
+import { Translation } from '@suite-components';
 
 const Wrapper = styled.div`
     display: flex;
     flex: 1;
     flex-direction: column;
+`;
+
+const Row = styled.div`
+    display: flex;
+    flex: 1;
+    flex-direction: row;
 `;
 
 const Top = styled.div`
@@ -57,6 +64,12 @@ const EmptyDiv = styled.div`
     width: 100%;
 `;
 
+const ClearFormButtonWrapper = styled.div`
+    display: flex;
+    width: 100%;
+    justify-content: flex-end;
+`;
+
 const Inputs = () => {
     const {
         errors,
@@ -68,11 +81,14 @@ const Inputs = () => {
         setValue,
         clearErrors,
         onCryptoAmountChange,
+        handleClearFormButtonClick,
+        formState,
+        isDraft,
     } = useCoinmarketSellFormContext();
     const [activeInput, setActiveInput] = useState<typeof FIAT_INPUT | typeof CRYPTO_INPUT>(
         FIAT_INPUT,
     );
-
+    const { isDirty } = formState;
     // if FIAT_INPUT has a valid value, set it as the activeInput
     if (watch(FIAT_INPUT) && !errors[FIAT_INPUT] && activeInput === CRYPTO_INPUT) {
         setActiveInput(FIAT_INPUT);
@@ -91,7 +107,7 @@ const Inputs = () => {
                 .dividedBy(divisor)
                 .decimalPlaces(network.decimals)
                 .toString();
-            setValue(CRYPTO_INPUT, amount);
+            setValue(CRYPTO_INPUT, amount, { shouldDirty: true });
             clearErrors([CRYPTO_INPUT]);
             setActiveInput(CRYPTO_INPUT);
             onCryptoAmountChange(amount);
@@ -100,8 +116,8 @@ const Inputs = () => {
     );
 
     const setAllAmount = useCallback(() => {
-        setValue('setMaxOutputId', 0);
-        setValue(FIAT_INPUT, '');
+        setValue('setMaxOutputId', 0, { shouldDirty: true });
+        setValue(FIAT_INPUT, '', { shouldDirty: true });
         clearErrors([FIAT_INPUT, CRYPTO_INPUT]);
         setActiveInput(CRYPTO_INPUT);
         composeRequest(CRYPTO_INPUT);
@@ -110,34 +126,63 @@ const Inputs = () => {
     const isBalanceZero = new BigNumber(account.formattedBalance).isZero();
 
     return (
-        <Wrapper>
-            <Top>
-                <Left>
-                    <CryptoInput activeInput={activeInput} setActiveInput={setActiveInput} />
-                </Left>
-                <Middle>
-                    {!isLargeLayoutSize && (
+        <>
+            <Wrapper>
+                <Top>
+                    <Left>
+                        <CryptoInput activeInput={activeInput} setActiveInput={setActiveInput} />
+                    </Left>
+                    <Middle>
+                        {!isLargeLayoutSize && (
+                            <FractionButtons
+                                disabled={isBalanceZero}
+                                onFractionClick={setRatioAmount}
+                                onAllClick={setAllAmount}
+                            />
+                        )}
+                        <StyledIcon icon="TRANSFER" size={16} />
+                        {!isLargeLayoutSize && <EmptyDiv />}
+                        {!isLargeLayoutSize && (
+                            <ClearFormButtonWrapper>
+                                <Button
+                                    type="button"
+                                    variant="tertiary"
+                                    onClick={handleClearFormButtonClick}
+                                >
+                                    <Translation id="TR_CLEAR_FORM" />
+                                </Button>
+                            </ClearFormButtonWrapper>
+                        )}
+                    </Middle>
+                    <Right>
+                        <FiatInput activeInput={activeInput} setActiveInput={setActiveInput} />
+                    </Right>
+                </Top>
+            </Wrapper>
+
+            {isLargeLayoutSize && (
+                <Row>
+                    <Left>
                         <FractionButtons
                             disabled={isBalanceZero}
                             onFractionClick={setRatioAmount}
                             onAllClick={setAllAmount}
                         />
-                    )}
-                    <StyledIcon icon="TRANSFER" size={16} />
-                    {!isLargeLayoutSize && <EmptyDiv />}
-                </Middle>
-                <Right>
-                    <FiatInput activeInput={activeInput} setActiveInput={setActiveInput} />
-                </Right>
-            </Top>
-            {isLargeLayoutSize && (
-                <FractionButtons
-                    disabled={isBalanceZero}
-                    onFractionClick={setRatioAmount}
-                    onAllClick={setAllAmount}
-                />
+                    </Left>
+                    <Right>
+                        {(isDirty || isDraft) && (
+                            <Button
+                                type="button"
+                                variant="tertiary"
+                                onClick={handleClearFormButtonClick}
+                            >
+                                <Translation id="TR_CLEAR_FORM" />
+                            </Button>
+                        )}
+                    </Right>
+                </Row>
             )}
-        </Wrapper>
+        </>
     );
 };
 

@@ -183,6 +183,8 @@ export const useWatchSellTrade = (account: Account, trade: TradeSell) => {
         cancelRefresh();
     });
 
+    const { removeDraft } = useFormDraft('coinmarket-sell');
+
     useEffect(() => {
         if (trade && shouldRefreshSellTrade(trade)) {
             cancelRefresh();
@@ -196,9 +198,12 @@ export const useWatchSellTrade = (account: Account, trade: TradeSell) => {
                         error: response.error,
                     };
                     saveTrade(tradeData, account, newDate);
+                    if (response.status && SellFiatTradeFinalStatuses.includes(response.status)) {
+                        removeDraft(account.key);
+                    }
                 }
             });
             resetRefresh();
         }
-    }, [account, cancelRefresh, refreshCount, resetRefresh, saveTrade, trade]);
+    }, [account, cancelRefresh, refreshCount, removeDraft, resetRefresh, saveTrade, trade]);
 };

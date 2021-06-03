@@ -1,5 +1,5 @@
-import { createContext, useContext, useCallback, useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { createContext, useContext, useCallback, useState, useEffect, useMemo } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { SellFiatTradeQuoteRequest } from 'invity-api';
 import { useActions, useSelector } from '@suite-hooks';
 import invityAPI from '@suite-services/invityAPI';
@@ -29,11 +29,17 @@ import { getAmountLimits, processQuotes } from '@wallet-utils/coinmarket/sellUti
 import { useFees } from './form/useFees';
 import { useCompose } from './form/useCompose';
 import { DEFAULT_PAYMENT, DEFAULT_VALUES } from '@wallet-constants/sendForm';
+import useDebounce from 'react-use/lib/useDebounce';
+import { useFormDraft } from '@wallet-hooks/useFormDraft';
 
 export const SellFormContext = createContext<SellFormContextValues | null>(null);
 SellFormContext.displayName = 'CoinmarketSellContext';
 
-const useSellState = ({ selectedAccount, fees }: Props, currentState: boolean) => {
+const useSellState = (
+    { selectedAccount, fees }: Props,
+    currentState: boolean,
+    draft?: FormState,
+) => {
     // do not calculate if currentState is already set (prevent re-renders)
     if (selectedAccount.status !== 'loaded' || currentState) return;
 
@@ -47,14 +53,17 @@ const useSellState = ({ selectedAccount, fees }: Props, currentState: boolean) =
         network,
         feeInfo,
         formValues: {
-            ...DEFAULT_VALUES,
-            outputs: [
-                {
-                    ...DEFAULT_PAYMENT,
-                },
-            ],
-            options: ['broadcast'],
-        } as FormState, // TODO: remove type casting (options string[])
+            ...draft,
+            ...({
+                ...DEFAULT_VALUES,
+                outputs: [
+                    {
+                        ...DEFAULT_PAYMENT,
+                    },
+                ],
+                options: ['broadcast'],
+            } as FormState),
+        }, // TODO: remove type casting (options string[])
     };
 };
 
@@ -85,8 +94,11 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
         accounts: state.wallet.accounts,
     }));
 
+    const { saveDraft, getDraft, removeDraft } = useFormDraft<SellFormState>('coinmarket-sell');
+    const draft = getDraft(account.key);
+    const isDraft = !!draft;
     // throttle initial state calculation
-    const initState = useSellState(props, !!state);
+    const initState = useSellState(props, !!state, draft);
     useEffect(() => {
         const setStateAsync = async (initState: ReturnType<typeof useSellState>) => {
             const address = await getComposeAddressPlaceholder(account, network, device, accounts);
@@ -101,12 +113,40 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
         }
     }, [state, initState, account, network, device, accounts]);
 
+    const defaultValues = useMemo(
+        () => ({ selectedFee: 'normal', feePerUnit: '', feeLimit: '' } as const),
+        [],
+    );
+
     const methods = useForm<SellFormState>({
         mode: 'onChange',
-        shouldUnregister: false, // NOTE: tracking custom fee inputs
-        defaultValues: { selectedFee: 'normal', feePerUnit: '', feeLimit: '' },
+        defaultValues,
     });
-    const { reset, register, setValue, getValues, setError, clearErrors, trigger } = methods;
+
+    const {
+        reset,
+        register,
+        setValue,
+        getValues,
+        setError,
+        clearErrors,
+        trigger,
+        control,
+        errors,
+        formState,
+    } = methods;
+
+    const values = useWatch<SellFormState>({ control });
+
+    useDebounce(
+        () => {
+            if (formState.isDirty && !formState.isValidating && Object.keys(errors).length === 0) {
+                saveDraft(selectedAccount.account.key, values as SellFormState);
+            }
+        },
+        200,
+        [errors, saveDraft, selectedAccount.account.key, values, formState],
+    );
 
     // react-hook-form auto register custom form fields (without HTMLElement)
     useEffect(() => {
@@ -273,6 +313,11 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
         }
     };
 
+    const handleClearFormButtonClick = useCallback(() => {
+        removeDraft(account.key);
+        reset(defaultValues);
+    }, [account.key, removeDraft, reset, defaultValues]);
+
     return {
         ...methods,
         account,
@@ -300,6 +345,9 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
         network,
         onCryptoAmountChange,
         onFiatAmountChange,
+        handleClearFormButtonClick,
+        formState,
+        isDraft,
     };
 };
 
