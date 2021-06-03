@@ -1,7 +1,7 @@
 import { AppState } from '@suite-types';
 import { Account, Network } from '@wallet-types';
 import { BuyInfo, saveQuotes, saveTrade } from '@wallet-actions/coinmarketBuyActions';
-import { UseFormMethods } from 'react-hook-form';
+import { UseFormMethods, FormState as ReactHookFormState } from 'react-hook-form';
 import { TypedValidationRules } from './form';
 import { DefaultCountryOption, Option } from './coinmarketCommonTypes';
 
@@ -45,5 +45,7 @@ export type BuyFormContextValues = Omit<UseFormMethods<FormState>, 'register'> &
     network: Network;
     cryptoInputValue?: string;
     removeDraft: (key: string) => void;
-    isDirty: boolean;
+    formState: ReactHookFormState<FormState>;
+    isDraft: boolean;
+    handleClearFormButtonClick: () => void;
 };

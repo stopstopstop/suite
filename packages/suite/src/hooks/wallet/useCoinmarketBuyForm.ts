@@ -27,10 +27,11 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
     const { account, network } = selectedAccount;
     const [amountLimits, setAmountLimits] = useState<AmountLimits | undefined>(undefined);
     const { saveDraft, getDraft, removeDraft } = useFormDraft<FormState>('coinmarket-buy');
-    const defaultValues = getDraft(selectedAccount.account.key);
+    const draft = getDraft(account.key);
+    const isDraft = !!draft;
     const methods = useForm<FormState>({
         mode: 'onChange',
-        defaultValues,
+        defaultValues: draft,
     });
 
     const { saveQuoteRequest, saveQuotes, saveCachedAccountInfo, saveTrade, goto } = useActions({
@@ -41,23 +42,18 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         goto: routerActions.goto,
     });
 
-    const {
-        register,
-        control,
-        formState: { isValidating, isDirty },
-        errors,
-    } = methods;
+    const { register, control, formState, errors, reset } = methods;
 
     const values = useWatch<FormState>({ control });
 
     useDebounce(
         () => {
-            if (isDirty && !isValidating && Object.keys(errors).length === 0) {
-                saveDraft(selectedAccount.account.key, values as FormState);
+            if (formState.isDirty && !formState.isValidating && Object.keys(errors).length === 0) {
+                saveDraft(account.key, values as FormState);
             }
         },
         200,
-        [errors, saveDraft, selectedAccount.account.key, values, isValidating, isDirty],
+        [errors, saveDraft, account.key, values, formState],
     );
 
     const onSubmit = async () => {
@@ -108,6 +104,11 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         (buyInfo?.buyInfo?.providers.length === 0 ||
             !buyInfo?.supportedCryptoCurrencies.has(account.symbol));
 
+    const handleClearFormButtonClick = useCallback(() => {
+        reset({});
+        removeDraft(account.key);
+    }, [account.key, removeDraft, reset]);
+
     return {
         ...methods,
         account,
@@ -125,7 +126,9 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         network,
         cryptoInputValue: values.cryptoInput,
         removeDraft,
-        isDirty,
+        formState,
+        isDraft,
+        handleClearFormButtonClick,
     };
 };
 

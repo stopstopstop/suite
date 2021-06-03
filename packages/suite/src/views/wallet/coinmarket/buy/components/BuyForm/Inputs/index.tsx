@@ -21,9 +21,9 @@ const Wrapper = styled.div`
     }
 `;
 
-const ClearAllButtonWrapper = styled(Wrapper)<{ isVisible: boolean }>`
+const ClearAllButtonWrapper = styled(Wrapper)`
+    height: 48px;
     padding-bottom: 25px;
-    visibility: ${props => (props.isVisible ? 'visible' : 'hidden')};
 `;
 
 const Left = styled.div`
@@ -60,23 +60,23 @@ const StyledInput = styled(Input)`
 const Inputs = () => {
     const {
         register,
-        reset,
         errors,
         trigger,
-        isDirty,
+        formState,
         account,
         network,
         control,
         setValue,
         clearErrors,
-        formState,
         amountLimits,
         buyInfo,
         setAmountLimits,
         defaultCurrency,
         cryptoInputValue,
-        removeDraft,
+        handleClearFormButtonClick,
+        isDraft,
     } = useCoinmarketBuyFormContext();
+    const { isDirty } = formState;
     const { symbol } = account;
     const uppercaseSymbol = symbol.toUpperCase();
     const fiatInput = 'fiatInput';
@@ -92,11 +92,6 @@ const Inputs = () => {
     useEffect(() => {
         trigger([activeInput]);
     }, [activeInput, amountLimits, trigger]);
-
-    const handleClearFormButtonClick = useCallback(() => {
-        reset();
-        removeDraft(account.key);
-    }, [account.key, removeDraft, reset]);
 
     return (
         <>
@@ -315,12 +310,18 @@ const Inputs = () => {
                     />
                 </Right>
             </Wrapper>
-            <ClearAllButtonWrapper isVisible={isDirty}>
-                <Right>
-                    <Button type="button" variant="tertiary" onClick={handleClearFormButtonClick}>
-                        <Translation id="TR_CLEAR_FORM" />
-                    </Button>
-                </Right>
+            <ClearAllButtonWrapper>
+                {(isDirty || isDraft) && (
+                    <Right>
+                        <Button
+                            type="button"
+                            variant="tertiary"
+                            onClick={handleClearFormButtonClick}
+                        >
+                            <Translation id="TR_CLEAR_FORM" />
+                        </Button>
+                    </Right>
+                )}
             </ClearAllButtonWrapper>
         </>
     );
