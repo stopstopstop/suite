@@ -120,6 +120,7 @@ export const useCoinmarketSellForm = (props: Props): SellFormContextValues => {
 
     const methods = useForm<SellFormState>({
         mode: 'onChange',
+        shouldUnregister: false, // NOTE: tracking custom fee inputs
         defaultValues,
     });
 
