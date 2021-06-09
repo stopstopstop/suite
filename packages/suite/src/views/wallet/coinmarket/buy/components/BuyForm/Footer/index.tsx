@@ -70,6 +70,11 @@ const StyledButton = styled(Button)`
     }
 `;
 
+const ClearFormButton = styled(Button)`
+    align-self: center;
+    height: 24px;
+`;
+
 const StyledSelect = styled(Select)`
     width: max-content;
 `;
@@ -82,7 +87,10 @@ const Footer = () => {
         watch,
         setAmountLimits,
         defaultCountry,
+        handleClearFormButtonClick,
+        isDraft,
     } = useCoinmarketBuyFormContext();
+    const { isDirty } = formState;
     const countrySelect = 'countrySelect';
     const hasValues =
         (watch('fiatInput') || watch('cryptoInput')) && !!watch('currencySelect').value;
@@ -134,6 +142,15 @@ const Footer = () => {
                 />
             </Left>
             <Right>
+                {(isDirty || isDraft) && (
+                    <ClearFormButton
+                        type="button"
+                        variant="tertiary"
+                        onClick={handleClearFormButtonClick}
+                    >
+                        <Translation id="TR_CLEAR_FORM" />
+                    </ClearFormButton>
+                )}
                 <StyledButton
                     isDisabled={!(formIsValid && hasValues) || formState.isSubmitting}
                     isLoading={formState.isSubmitting}

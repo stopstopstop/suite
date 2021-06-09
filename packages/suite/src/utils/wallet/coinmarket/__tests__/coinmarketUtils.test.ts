@@ -10,6 +10,7 @@ import {
 describe('coinmarket utils', () => {
     it('buildOption', () => {
         expect(buildOption('czk')).toStrictEqual({ value: 'czk', label: 'CZK' });
+        expect(buildOption('CZK')).toStrictEqual({ value: 'czk', label: 'CZK' });
     });
 
     it('symbolToInvityApiSymbol', () => {

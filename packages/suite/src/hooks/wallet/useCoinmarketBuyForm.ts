@@ -1,10 +1,10 @@
-import { createContext, useContext, useCallback, useState } from 'react';
+import { createContext, useContext, useCallback, useState, useEffect } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
+import isEqual from 'lodash/isEqual';
+import useDebounce from 'react-use/lib/useDebounce';
 import { useInvityAPI } from '@wallet-hooks/useCoinmarket';
 import * as coinmarketBuyActions from '@wallet-actions/coinmarketBuyActions';
 import { useActions } from '@suite-hooks';
-import { buildOption } from '@wallet-utils/coinmarket/coinmarketUtils';
-import regional from '@wallet-constants/coinmarket/regional';
 import { BuyTradeQuoteRequest } from 'invity-api';
 import invityAPI from '@suite-services/invityAPI';
 import * as routerActions from '@suite-actions/routerActions';
@@ -16,7 +16,7 @@ import {
     BuyFormContextValues,
 } from '@wallet-types/coinmarketBuyForm';
 import { useFormDraft } from '@wallet-hooks/useFormDraft';
-import useDebounce from 'react-use/lib/useDebounce';
+import { useCoinmarketBuyFormDefaultValues } from './useCoinmarketBuyFormDefaultValues';
 
 export const BuyFormContext = createContext<BuyFormContextValues | null>(null);
 BuyFormContext.displayName = 'CoinmarketBuyContext';
@@ -29,9 +29,13 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
     const { saveDraft, getDraft, removeDraft } = useFormDraft<FormState>('coinmarket-buy');
     const draft = getDraft(account.key);
     const isDraft = !!draft;
+    const { defaultValues, defaultCountry, defaultCurrency } = useCoinmarketBuyFormDefaultValues(
+        account.symbol,
+        buyInfo,
+    );
     const methods = useForm<FormState>({
         mode: 'onChange',
-        defaultValues: draft,
+        defaultValues: isDraft ? draft : defaultValues,
     });
 
     const { saveQuoteRequest, saveQuotes, saveCachedAccountInfo, saveTrade, goto } = useActions({
@@ -43,8 +47,19 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
     });
 
     const { register, control, formState, errors, reset } = methods;
-
     const values = useWatch<FormState>({ control });
+
+    useEffect(() => {
+        // when draft doesn't exist, we need to bind actual default values - that happens when we've got buyInfo from Invity API server
+        if (!isDraft && defaultValues) {
+            reset(defaultValues);
+        }
+    }, [reset, defaultValues, isDraft]);
+
+    const resetForm = useCallback(() => {
+        reset({});
+        removeDraft(account.key);
+    }, [account.key, removeDraft, reset]);
 
     useDebounce(
         () => {
@@ -55,6 +70,11 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         200,
         [errors, saveDraft, account.key, values, formState],
     );
+    useEffect(() => {
+        if (isEqual(defaultValues, values)) {
+            removeDraft(account.key);
+        }
+    }, [defaultValues, values, removeDraft, account.key]);
 
     const onSubmit = async () => {
         const formValues = methods.getValues();
@@ -87,27 +107,12 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         }
     };
 
-    const country = buyInfo?.buyInfo?.country || regional.unknownCountry;
-    const defaultCountry = {
-        label: regional.countriesMap.get(country),
-        value: country,
-    };
-    const defaultCurrencyInfo = buyInfo?.buyInfo?.suggestedFiatCurrency;
-    const defaultCurrency = defaultCurrencyInfo
-        ? buildOption(defaultCurrencyInfo)
-        : { label: 'USD', value: 'usd' };
-
     const typedRegister = useCallback(<T>(rules?: T) => register(rules), [register]);
     const isLoading = !buyInfo || !buyInfo?.buyInfo;
     const noProviders =
         !isLoading &&
         (buyInfo?.buyInfo?.providers.length === 0 ||
             !buyInfo?.supportedCryptoCurrencies.has(account.symbol));
-
-    const handleClearFormButtonClick = useCallback(() => {
-        reset({});
-        removeDraft(account.key);
-    }, [account.key, removeDraft, reset]);
 
     return {
         ...methods,
@@ -128,7 +133,7 @@ export const useCoinmarketBuyForm = (props: Props): BuyFormContextValues => {
         removeDraft,
         formState,
         isDraft,
-        handleClearFormButtonClick,
+        handleClearFormButtonClick: resetForm,
     };
 };
 

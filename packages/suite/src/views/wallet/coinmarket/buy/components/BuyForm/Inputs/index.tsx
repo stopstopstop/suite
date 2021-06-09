@@ -72,10 +72,7 @@ const Inputs = () => {
         setAmountLimits,
         defaultCurrency,
         cryptoInputValue,
-        handleClearFormButtonClick,
-        isDraft,
     } = useCoinmarketBuyFormContext();
-    const { isDirty } = formState;
     const { symbol } = account;
     const uppercaseSymbol = symbol.toUpperCase();
     const fiatInput = 'fiatInput';
@@ -309,19 +306,6 @@ const Inputs = () => {
                     />
                 </Right>
             </Wrapper>
-            <ClearAllButtonWrapper>
-                {(isDirty || isDraft) && (
-                    <Right>
-                        <Button
-                            type="button"
-                            variant="tertiary"
-                            onClick={handleClearFormButtonClick}
-                        >
-                            <Translation id="TR_CLEAR_FORM" />
-                        </Button>
-                    </Right>
-                )}
-            </ClearAllButtonWrapper>
         </>
     );
 };

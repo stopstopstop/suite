@@ -11,7 +11,7 @@ const suiteToInvitySymbols = [
 ];
 
 export const buildOption = (currency: string) => ({
-    value: currency,
+    value: currency.toLocaleLowerCase(),
     label: currency.toUpperCase(),
 });
 
