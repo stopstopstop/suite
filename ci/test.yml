@@ -129,3 +129,10 @@ rollout test integration:
   script:
     - yarn install --frozen-lockfile --cache-folder .yarn --prefer-offline
     - yarn workspace @trezor/rollout test:integration
+
+rollout test integration manual:
+  when: manual
+  stage: integration testing
+  script:
+    - yarn install --frozen-lockfile --cache-folder .yarn --prefer-offline
+    - yarn workspace @trezor/rollout test:integration
