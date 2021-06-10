@@ -126,10 +126,11 @@ const ScrollAppWrapper = ({ url, children }: ScrollAppWrapperProps) => {
     return <AppWrapper ref={ref}>{children}</AppWrapper>;
 };
 
+/** Displays menu, body and guide in three columns. */
 const BodyWide = ({ url, menu, appMenu, children, guideOpen }: BodyProps) => (
     <Body>
         <Columns>
-            {menu && !guideOpen && <MenuSecondary>{menu}</MenuSecondary>}
+            {menu && <MenuSecondary>{menu}</MenuSecondary>}
             <ScrollAppWrapper url={url}>
                 {appMenu}
                 <DefaultPaddings>
@@ -141,6 +142,27 @@ const BodyWide = ({ url, menu, appMenu, children, guideOpen }: BodyProps) => (
     </Body>
 );
 
+/**
+ * Displays menu and body in two columns when guide is closed.
+ * Displays menu inlined in body when guide is open.
+ */
+const BodyNormal = ({ url, menu, appMenu, children, guideOpen }: BodyProps) => (
+    <Body>
+        <Columns>
+            {!guideOpen && menu && <MenuSecondary>{menu}</MenuSecondary>}
+            <ScrollAppWrapper url={url}>
+                {guideOpen && menu}
+                {appMenu}
+                <DefaultPaddings>
+                    <MaxWidthWrapper>{children}</MaxWidthWrapper>
+                </DefaultPaddings>
+            </ScrollAppWrapper>
+            {guideOpen && <StyledGuidePanel />}
+        </Columns>
+    </Body>
+);
+
+/** Displays menu inlined in body and hides guide. */
 const BodyNarrow = ({ url, menu, appMenu, children }: BodyProps) => (
     <Body>
         <Columns>
@@ -156,7 +178,7 @@ const BodyNarrow = ({ url, menu, appMenu, children }: BodyProps) => (
 type SuiteLayoutProps = Omit<Props, 'menu' | 'appMenu'>;
 const SuiteLayout = (props: SuiteLayoutProps) => {
     // TODO: if (props.layoutSize === 'UNAVAILABLE') return <SmallLayout />;
-    const { isMobileLayout } = useLayoutSize();
+    const { isMobileLayout, layoutSize } = useLayoutSize();
     const { guideOpen } = useSelector(state => ({
         guideOpen: state.guide.open,
     }));
@@ -182,7 +204,7 @@ const SuiteLayout = (props: SuiteLayoutProps) => {
             <DiscoveryProgress />
             <NavigationBar />
             <LayoutContext.Provider value={{ title, menu, setLayout }}>
-                {!isMobileLayout && (
+                {layoutSize === 'XLARGE' && (
                     <BodyWide
                         menu={menu}
                         appMenu={appMenu}
@@ -191,6 +213,16 @@ const SuiteLayout = (props: SuiteLayoutProps) => {
                     >
                         {props.children}
                     </BodyWide>
+                )}
+                {layoutSize !== 'XLARGE' && !isMobileLayout && (
+                    <BodyNormal
+                        menu={menu}
+                        appMenu={appMenu}
+                        url={props.router.url}
+                        guideOpen={guideOpen}
+                    >
+                        {props.children}
+                    </BodyNormal>
                 )}
                 {isMobileLayout && (
                     <BodyNarrow menu={menu} appMenu={appMenu} url={props.router.url}>
