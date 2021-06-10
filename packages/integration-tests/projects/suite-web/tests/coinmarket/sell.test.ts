@@ -20,4 +20,22 @@ describe('Coinmarket sell', () => {
         cy.prefixedVisit('/accounts/coinmarket/sell/#/btc/0');
         cy.getTestElement('@coinmarket/sell/crypto-currency-select/input').contains('BTC');
     });
+
+    it("Should remember form's values as a draft", () => {
+        cy.prefixedVisit('/accounts/coinmarket/sell/#/btc/0');
+        cy.getTestElement('@coinmarket/sell/fiat-input').type('1000');
+        cy.prefixedVisit('/accounts');
+        cy.getTestElement('@coinmarket/sell/fiat-input').should('equal', '1000');
+
+        // TODO: rest of inputs
+    });
+
+    it('Should clear form draft', () => {
+        cy.prefixedVisit('/accounts/coinmarket/sell/#/btc/0');
+        cy.getTestElement('@coinmarket/sell/fiat-input').type('1000');
+        cy.getTestElement('(clear form button id)').click();
+        cy.getTestElement('@coinmarket/sell/fiat-input').should('equal', '');
+
+        // TODO: rest of inputs
+    });
 });
