@@ -28,7 +28,8 @@ export interface Props extends ComponentProps {
 }
 
 export type ExchangeFormState = FormState & {
-    receiveCryptoSelect: Option;
+    // NOTE: react-select value type cannot be undefined, but at lease null works
+    receiveCryptoSelect: Option | null;
     sendCryptoSelect: Option;
 };
 
@@ -46,7 +47,7 @@ export type ExchangeFormContextValues = Omit<UseFormMethods<ExchangeFormState>, 
     changeFeeLevel: (level: FeeLevel['label']) => void;
     exchangeInfo?: ExchangeInfo;
     exchangeCoinInfo?: ExchangeCoinInfo[];
-    localCurrencyOption: { label: string; value: string };
+    defaultCurrency: Option;
     composeRequest: (field?: string) => void;
     updateFiatCurrency: (selectedCurrency: { value: string; label: string }) => void;
     updateSendCryptoValue: (fiatValue: string, decimals: number) => void;

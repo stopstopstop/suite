@@ -1,7 +1,7 @@
 import { FIAT } from '@suite-config';
 import { Translation } from '@suite-components';
 import { getCryptoOptions } from '@wallet-utils/coinmarket/buyUtils';
-import { Select, Icon, Input, variables, Button } from '@trezor/components';
+import { Select, Icon, Input, variables } from '@trezor/components';
 import { buildOption } from '@wallet-utils/coinmarket/coinmarketUtils';
 import React, { useEffect, useState } from 'react';
 import Bignumber from 'bignumber.js';
@@ -19,11 +19,6 @@ const Wrapper = styled.div`
     @media screen and (max-width: ${variables.SCREEN_SIZE.LG}) {
         flex-direction: column;
     }
-`;
-
-const ClearAllButtonWrapper = styled(Wrapper)`
-    height: 48px;
-    padding-bottom: 25px;
 `;
 
 const Left = styled.div`
